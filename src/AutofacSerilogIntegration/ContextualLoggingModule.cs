@@ -56,11 +56,10 @@ namespace AutofacSerilogIntegration
 
                 if (_autowireProperties)
                 {
-                    var logProperties =
-                        ra.LimitType.GetProperties(BindingFlags.SetProperty | BindingFlags.Public |
-                                                   BindingFlags.Instance)
-                            .Where(p => p.PropertyType == typeof (ILogger))
-                            .ToArray();
+                    var logProperties = ra.LimitType
+                                            .GetRuntimeProperties()
+                                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
+                                            .ToArray();
 
                     if (logProperties.Any())
                     {
