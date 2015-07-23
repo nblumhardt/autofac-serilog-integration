@@ -35,7 +35,9 @@ namespace AutofacSerilogIntegration
                     return logger.ForContext((Type) targetType.Value);
 
                 return logger;
-            }).As<ILogger>();
+            })
+            .As<ILogger>()
+            .ExternallyOwned();
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
