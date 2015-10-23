@@ -35,11 +35,9 @@
     </Reference>
     <Reference Include="Serilog">
       <HintPath>..\..\packages\Serilog.1.5.7\lib\net40\Serilog.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Serilog.FullNetFx">
       <HintPath>..\..\packages\Serilog.1.5.7\lib\net40\Serilog.FullNetFx.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
