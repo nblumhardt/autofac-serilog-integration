@@ -89,7 +89,7 @@ namespace AutofacSerilogIntegration
                     var log = args.Context.Resolve<ILogger>().ForContext(registration.Activator.LimitType);
                     foreach (var targetProperty in targetProperties)
                     {
-                        targetProperty.SetValue(args.Instance, log);
+                        targetProperty.SetValue(args.Instance, log, null);
                     }
                 };
             }
