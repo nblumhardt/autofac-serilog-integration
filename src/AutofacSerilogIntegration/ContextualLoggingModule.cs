@@ -9,22 +9,27 @@ using Module = Autofac.Module;
 
 namespace AutofacSerilogIntegration
 {
+    using Autofac.Builder;
+
     public class ContextualLoggingModule : Module
     {
         const string TargetTypeParameterName = "Autofac.AutowiringPropertyInjector.InstanceType";
 
         readonly ILogger _logger;
         readonly bool _autowireProperties;
+        private readonly Action<IRegistrationBuilder<ILogger, SimpleActivatorData, SingleRegistrationStyle>>
+            _optionalRegistrationConfiguration;
 
-        public ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
+        public ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, Action<IRegistrationBuilder<ILogger, SimpleActivatorData, SingleRegistrationStyle>> configureRegistration = null)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
+            _optionalRegistrationConfiguration = configureRegistration;
         }
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register((c, p) =>
+            var registration = builder.Register((c, p) =>
             {
                 var logger = _logger ?? Log.Logger;
 
@@ -38,6 +43,8 @@ namespace AutofacSerilogIntegration
             })
             .As<ILogger>()
             .ExternallyOwned();
+
+            _optionalRegistrationConfiguration?.Invoke(registration);
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
