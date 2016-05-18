@@ -9,21 +9,33 @@ using Module = Autofac.Module;
 
 namespace AutofacSerilogIntegration
 {
-    public class ContextualLoggingModule : Module
+    internal class ContextualLoggingModule : Module
     {
         const string TargetTypeParameterName = "Autofac.AutowiringPropertyInjector.InstanceType";
 
         readonly ILogger _logger;
         readonly bool _autowireProperties;
+        readonly bool _skipRegistration;
 
-        public ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
+        [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
+        public ContextualLoggingModule()
+        {
+            // Workaround to skip the logger registration when module is loaded by Autofac assembly scanning
+            _skipRegistration = true;
+        }
+
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
+            _skipRegistration = false;
         }
 
         protected override void Load(ContainerBuilder builder)
         {
+            if (_skipRegistration)
+                return;
+
             builder.Register((c, p) =>
             {
                 var logger = _logger ?? Log.Logger;
@@ -43,6 +55,9 @@ namespace AutofacSerilogIntegration
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
             IComponentRegistration registration)
         {
+            if (_skipRegistration)
+                return;
+
             // Ignore components that provide loggers (and thus avoid a circular dependency below)
             if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof (ILogger)))
                 return;
