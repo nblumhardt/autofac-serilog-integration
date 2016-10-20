@@ -15,6 +15,7 @@ namespace AutofacSerilogIntegration
 
         readonly ILogger _logger;
         readonly bool _autowireProperties;
+        readonly bool _autowirePrivateProperties;
         readonly bool _skipRegistration;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
@@ -24,10 +25,11 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool autowirePrivateProperties = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
+            _autowirePrivateProperties = autowirePrivateProperties;
             _skipRegistration = false;
         }
 
@@ -73,11 +75,21 @@ namespace AutofacSerilogIntegration
 
                 if (_autowireProperties)
                 {
-                    var logProperties = ra.LimitType
-                                            .GetRuntimeProperties()
-                                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
-                                            .ToArray();
-
+                    PropertyInfo[] logProperties;
+                    if (_autowirePrivateProperties)
+                    {
+                        logProperties = ra.LimitType
+                            .GetRuntimeProperties()
+                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger))
+                            .ToArray();
+                    }
+                    else
+                    {
+                        logProperties = ra.LimitType
+                            .GetRuntimeProperties()
+                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
+                            .ToArray();
+                    }
                     if (logProperties.Any())
                     {
                         targetProperties = logProperties;
