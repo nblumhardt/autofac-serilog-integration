@@ -2076,7 +2076,7 @@
           "lib/netstandard1.3/_._": {}
         }
       },
-      "AutofacSerilogIntegration/1.0.0": {
+      "AutofacSerilogIntegration/2.0.0": {
         "type": "project",
         "framework": ".NETStandard,Version=v1.1",
         "dependencies": {
@@ -6728,7 +6728,7 @@
         "ref/xamarinwatchos10/_._"
       ]
     },
-    "AutofacSerilogIntegration/1.0.0": {
+    "AutofacSerilogIntegration/2.0.0": {
       "type": "project",
       "path": "../../src/AutofacSerilogIntegration/project.json",
       "msbuildProject": "../../src/AutofacSerilogIntegration/AutofacSerilogIntegration.xproj"
@@ -6736,7 +6736,7 @@
   },
   "projectFileDependencyGroups": {
     "": [
-      "AutofacSerilogIntegration >= 1.0.0-*",
+      "AutofacSerilogIntegration >= 2.0.0-*",
       "Microsoft.NETCore.App >= 1.0.1",
       "Serilog >= 2.0.0",
       "Serilog.Sinks.Literate >= 2.0.0"
