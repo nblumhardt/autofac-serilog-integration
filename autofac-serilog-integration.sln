@@ -1,15 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9F0A3613-A36C-44AC-BE29-C982D36A22DB}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "AutofacSerilogIntegration", "src\AutofacSerilogIntegration\AutofacSerilogIntegration.xproj", "{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutofacSerilogIntegration", "src\AutofacSerilogIntegration\AutofacSerilogIntegration.csproj", "{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "example\Example\Example.csproj", "{B3E88BA9-57AA-4A33-A35B-FB26E150B86F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "example_", "example_", "{A273AF88-7BF3-43A3-BACC-3F47048ED2E6}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Example", "example\Example\Example.xproj", "{B3E88BA9-57AA-4A33-A35B-FB26E150B86F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,9 +24,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F} = {9F0A3613-A36C-44AC-BE29-C982D36A22DB}
-		{B3E88BA9-57AA-4A33-A35B-FB26E150B86F} = {A273AF88-7BF3-43A3-BACC-3F47048ED2E6}
 	EndGlobalSection
 EndGlobal
