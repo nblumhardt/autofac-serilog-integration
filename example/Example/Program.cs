@@ -37,6 +37,18 @@ namespace Example
         }
     }
 
+    class AcceptsLogViaPrivateProperty : IExample
+    {
+        private static ILogger Log { get; set; }
+
+        public void Show()
+        {
+            Log.Information("Hello, via private property injected logger!");
+        }
+    }
+
+
+
     class Program
     {
         static void Main()
@@ -50,9 +62,10 @@ namespace Example
             try
             {
                 var builder = new ContainerBuilder();
-                builder.RegisterLogger(autowireProperties: true);
+                builder.RegisterLogger(autowireProperties: true, autowirePrivateProperties: true);
                 builder.RegisterType<AcceptsLogViaCtor>().As<IExample>();
                 builder.RegisterType<AcceptsLogViaProperty>().As<IExample>();
+                builder.RegisterType<AcceptsLogViaPrivateProperty>().As<IExample>();
 
                 using (var container = builder.Build())
                 {
