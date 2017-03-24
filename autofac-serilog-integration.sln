@@ -1,12 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "AutofacSerilogIntegration", "src\AutofacSerilogIntegration\AutofacSerilogIntegration.xproj", "{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Example", "example\Example\Example.xproj", "{B3E88BA9-57AA-4A33-A35B-FB26E150B86F}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{096ECAC8-1B75-440C-95E6-0F3B206ED6F7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{2CB8CBB3-2348-4894-96FB-D762D023B351}"
@@ -15,13 +11,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{ED47F8
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
 		Build.ps1 = Build.ps1
-		global.json = global.json
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{3D50212A-D8F6-40EF-90C3-E850627F5618}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "AutofacSerilogIntegration.Tests", "test\AutofacSerilogIntegration.Tests\AutofacSerilogIntegration.Tests.xproj", "{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutofacSerilogIntegration", "src\AutofacSerilogIntegration\AutofacSerilogIntegration.csproj", "{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example", "example\Example\Example.csproj", "{B3E88BA9-57AA-4A33-A35B-FB26E150B86F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutofacSerilogIntegration.Tests", "test\AutofacSerilogIntegration.Tests\AutofacSerilogIntegration.Tests.csproj", "{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
