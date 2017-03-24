@@ -1,6 +1,4 @@
-# Contextual logger injection for Autofac
-
-[![Build status](https://ci.appveyor.com/api/projects/status/lannw2ooxpnwgdp4/branch/master?svg=true)](https://ci.appveyor.com/project/NicholasBlumhardt/autofac-serilog-integration/branch/master)
+# Contextual logger injection for Autofac [![Build status](https://ci.appveyor.com/api/projects/status/lannw2ooxpnwgdp4/branch/master?svg=true)](https://ci.appveyor.com/project/NicholasBlumhardt/autofac-serilog-integration/branch/master) [![NuGet Pre Release](https://img.shields.io/nuget/vpre/AutofacSerilogIntegration.svg)](https://nuget.org/packages/AutofacSerilogIntegration)
 
 When using [Serilog](http://serilog.net), _contextual_ loggers attach the logging type's name to log events so they can later be found and filtered:
 

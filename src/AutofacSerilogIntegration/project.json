@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0-*",
+  "title": "AutofacSerilogIntegration",
+  "authors": [ "Nicholas Blumhardt" ],
+  "description": "Contextual logger injection for Autofac using Serilog",
+  "packOptions": {
+    "tags": [ "Autofac" ],
+    "projectUrl": "https://github.com/nblumhardt/autofac-serilog-integration",
+    "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0",
+    "owners": [ "Nicholas Blumhardt" ],
+    "requireLicenseAcceptance": false
+  },
+  "dependencies": {
+    "Autofac": "4.0.0",
+    "Serilog": "2.0.0"
+  },
+  "buildOptions": {
+    "keyFile": "AutofacSerilogIntegration.snk"
+  },
+  "frameworks": {
+    "net4.5": {},
+    "netstandard1.1": {
+      "dependencies": {
+        "NETStandard.Library": "1.6.0"
+      }
+    }
+  }
+}

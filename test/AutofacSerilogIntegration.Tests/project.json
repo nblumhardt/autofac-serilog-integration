@@ -1,0 +1,30 @@
+﻿{
+  "testRunner": "xunit",
+
+  "dependencies": {
+    "AutofacSerilogIntegration": { "target": "project" },
+    "xunit": "2.1.0",
+    "dotnet-test-xunit": "1.0.0-rc2-build10025"
+  },
+
+  "buildOptions": {
+    "keyFile": "../../src/AutofacSerilogIntegration/AutofacSerilogIntegration.snk"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "type": "platform",
+          "version": "1.0.0"
+        }
+      },
+      "imports": [
+        "dnxcore50",
+        "portable-net45+win8"
+      ]
+    },
+    "net4.6": {}
+  }
+}
+
