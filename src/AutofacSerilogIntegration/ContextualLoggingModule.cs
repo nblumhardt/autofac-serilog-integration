@@ -16,6 +16,7 @@ namespace AutofacSerilogIntegration
         readonly ILogger _logger;
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
+        private bool _dispose;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
@@ -24,10 +25,11 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
+            _dispose = dispose;
             _skipRegistration = false;
         }
 
@@ -36,7 +38,7 @@ namespace AutofacSerilogIntegration
             if (_skipRegistration)
                 return;
 
-            builder.Register((c, p) =>
+            var registration = builder.Register((c, p) =>
             {
                 var logger = _logger ?? Log.Logger;
 
@@ -48,8 +50,17 @@ namespace AutofacSerilogIntegration
 
                 return logger;
             })
-            .As<ILogger>()
-            .ExternallyOwned();
+            .As<ILogger>();
+
+            if (_dispose)
+            {
+                registration.SingleInstance()
+                    .OnRelease(logger => Log.CloseAndFlush());
+            }
+            else
+            {
+                registration.ExternallyOwned();
+            }
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
