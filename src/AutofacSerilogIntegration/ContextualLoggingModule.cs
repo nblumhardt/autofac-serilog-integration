@@ -16,7 +16,7 @@ namespace AutofacSerilogIntegration
         readonly ILogger _logger;
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
-        private bool _dispose;
+        readonly bool _dispose;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
