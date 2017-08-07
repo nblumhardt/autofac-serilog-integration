@@ -38,9 +38,22 @@ namespace AutofacSerilogIntegration
             if (_skipRegistration)
                 return;
 
-            var registration = builder.Register((c, p) =>
+            LoggerProvider provider = new LoggerProvider(_logger, _dispose);
+
+            var providerRegistration = builder.Register(c => provider);
+            if (_dispose)
             {
-                var logger = _logger ?? Log.Logger;
+                providerRegistration.SingleInstance()
+                    .OnRelease(c => c.Dispose());
+            }
+            else
+            {
+                providerRegistration.ExternallyOwned();
+            }
+
+            builder.Register((c, p) =>
+            {
+                var logger = c.Resolve<LoggerProvider>().GetLogger();
 
                 var targetType = p.OfType<NamedParameter>()
                     .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
@@ -51,16 +64,6 @@ namespace AutofacSerilogIntegration
                 return logger;
             })
             .As<ILogger>();
-
-            if (_dispose)
-            {
-                registration.SingleInstance()
-                    .OnRelease(logger => Log.CloseAndFlush());
-            }
-            else
-            {
-                registration.ExternallyOwned();
-            }
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
@@ -70,7 +73,7 @@ namespace AutofacSerilogIntegration
                 return;
 
             // Ignore components that provide loggers (and thus avoid a circular dependency below)
-            if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof (ILogger)))
+            if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof(ILogger) || ts.ServiceType == typeof(LoggerProvider)))
                 return;
 
             PropertyInfo[] targetProperties = null;
