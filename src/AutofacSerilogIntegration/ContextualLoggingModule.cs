@@ -38,9 +38,12 @@ namespace AutofacSerilogIntegration
             if (_skipRegistration)
                 return;
 
-            LoggerProvider provider = new LoggerProvider(_logger, _dispose);
+            var providerRegistration = builder.Register(c =>
+            {
+                LoggerProvider provider = new LoggerProvider(_logger, _dispose);
+                return provider;
+            });
 
-            var providerRegistration = builder.Register(c => provider);
             if (_dispose)
             {
                 providerRegistration.SingleInstance()
@@ -63,7 +66,8 @@ namespace AutofacSerilogIntegration
 
                 return logger;
             })
-            .As<ILogger>();
+            .As<ILogger>()
+            .ExternallyOwned();
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,

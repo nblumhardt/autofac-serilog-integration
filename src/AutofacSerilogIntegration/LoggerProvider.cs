@@ -17,7 +17,7 @@ namespace AutofacSerilogIntegration
             }
             else if (logger != null && dispose)
             {
-                _disposeAction = () => { (logger as IDisposable)?.Dispose(); };
+                _disposeAction = () => { (_logger as IDisposable)?.Dispose(); };
             }
             else
             {
