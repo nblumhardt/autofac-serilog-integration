@@ -3,21 +3,21 @@ using Serilog;
 
 namespace AutofacSerilogIntegration
 {
-    internal class LoggerProvider : IDisposable
+    internal class LoggerProvider
     {
         readonly ILogger _logger;
-        readonly Action _disposeAction;
+        readonly Action _releaseAction;
 
         public LoggerProvider(ILogger logger = null)
         {
             _logger = logger ?? Log.Logger;
             if (logger == null)
             {
-                _disposeAction = () => { Log.CloseAndFlush(); };
+                _releaseAction = () => { Log.CloseAndFlush(); };
             }
             else
             {
-                _disposeAction = () => { (_logger as IDisposable)?.Dispose(); };
+                _releaseAction = () => { (_logger as IDisposable)?.Dispose(); };
             }
         }
 
@@ -26,9 +26,9 @@ namespace AutofacSerilogIntegration
             return _logger;
         }
 
-        public void Dispose()
+        public void Release()
         {
-			_disposeAction();
-		}
-	}
+            _releaseAction();
+        }
+    }
 }
