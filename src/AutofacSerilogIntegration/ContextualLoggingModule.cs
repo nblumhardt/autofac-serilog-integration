@@ -38,36 +38,47 @@ namespace AutofacSerilogIntegration
             if (_skipRegistration)
                 return;
 
-            var providerRegistration = builder.Register(c =>
-            {
-                LoggerProvider provider = new LoggerProvider(_logger, _dispose);
-                return provider;
-            });
-
             if (_dispose)
             {
-                providerRegistration.SingleInstance()
+                builder.Register(c =>
+                {
+                    LoggerProvider provider = new LoggerProvider(_logger);
+                    return provider;
+                })
+                    .AsSelf()
+                    .AutoActivate()
                     .OnRelease(c => c.Dispose());
+
+                builder.Register((c, p) =>
+                {
+                    var logger = c.Resolve<LoggerProvider>().GetLogger();
+
+                    var targetType = p.OfType<NamedParameter>()
+                        .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
+
+                    if (targetType != null)
+                        return logger.ForContext((Type)targetType.Value);
+
+                    return logger;
+                })
+                    .As<ILogger>()
+                    .ExternallyOwned();
             }
             else
             {
-                providerRegistration.ExternallyOwned();
+                builder.Register((c, p) =>
+                {
+                    var targetType = p.OfType<NamedParameter>()
+                        .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
+
+                    if (targetType != null)
+                        return (_logger ?? Log.Logger).ForContext((Type)targetType.Value);
+
+                    return _logger ?? Log.Logger;
+                })
+                    .As<ILogger>()
+                    .ExternallyOwned();
             }
-
-            builder.Register((c, p) =>
-            {
-                var logger = c.Resolve<LoggerProvider>().GetLogger();
-
-                var targetType = p.OfType<NamedParameter>()
-                    .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
-
-                if (targetType != null)
-                    return logger.ForContext((Type) targetType.Value);
-
-                return logger;
-            })
-            .As<ILogger>()
-            .ExternallyOwned();
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,

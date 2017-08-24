@@ -8,42 +8,27 @@ namespace AutofacSerilogIntegration
         readonly ILogger _logger;
         readonly Action _disposeAction;
 
-        public LoggerProvider(ILogger logger = null, bool dispose = false)
+        public LoggerProvider(ILogger logger = null)
         {
             _logger = logger ?? Log.Logger;
-            if (logger == null && dispose)
+            if (logger == null)
             {
                 _disposeAction = () => { Log.CloseAndFlush(); };
             }
-            else if (logger != null && dispose)
-            {
-                _disposeAction = () => { (_logger as IDisposable)?.Dispose(); };
-            }
             else
             {
-                _disposeAction = () => { };
+                _disposeAction = () => { (_logger as IDisposable)?.Dispose(); };
             }
         }
 
         public ILogger GetLogger()
         {
-            return _logger ?? Log.Logger;
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            _disposeAction();
-        }
-
-        ~LoggerProvider()
-        {
-            Dispose(false);
+            return _logger;
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-    }
+			_disposeAction();
+		}
+	}
 }
