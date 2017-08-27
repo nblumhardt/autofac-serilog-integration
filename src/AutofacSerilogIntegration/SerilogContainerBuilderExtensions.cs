@@ -19,10 +19,10 @@ namespace AutofacSerilogIntegration
         /// <param name="autowireProperties">If true, properties on reflection-based components of type <see cref="ILogger"/> will
         /// be injected.</param>
         /// <returns>An object supporting method chaining.</returns>
-        public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, ILogger logger = null, bool autowireProperties = false)
+        public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, ILogger logger = null, bool autowireProperties = false, bool dispose = false)
         {
             if (builder == null) throw new ArgumentNullException("builder");
-            return builder.RegisterModule(new ContextualLoggingModule(logger, autowireProperties));
+            return builder.RegisterModule(new ContextualLoggingModule(logger, autowireProperties, dispose));
         }
     }
 }
