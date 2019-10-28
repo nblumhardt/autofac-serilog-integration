@@ -103,7 +103,7 @@ namespace AutofacSerilogIntegration
                 {
                     ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
                 }
-                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Serilog reference to 4.7.0
+                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
                 {
                     ctors = new ConstructorInfo[0];
                 }
