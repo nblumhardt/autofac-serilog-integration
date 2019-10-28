@@ -96,7 +96,18 @@ namespace AutofacSerilogIntegration
             var ra = registration.Activator as ReflectionActivator;
             if (ra != null)
             {
-                var ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
+                // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
+                // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
+                ConstructorInfo[] ctors;
+                try
+                {
+                    ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
+                }
+                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
+                {
+                    ctors = new ConstructorInfo[0];
+                }
+                
                 var usesLogger =
                     ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof (ILogger));
 
