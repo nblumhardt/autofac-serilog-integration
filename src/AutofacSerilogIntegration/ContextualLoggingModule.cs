@@ -16,6 +16,7 @@ namespace AutofacSerilogIntegration
         readonly ILogger _logger;
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
+        readonly bool _dispose;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
@@ -24,10 +25,11 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false)
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
+            _dispose = dispose;
             _skipRegistration = false;
         }
 
@@ -36,20 +38,47 @@ namespace AutofacSerilogIntegration
             if (_skipRegistration)
                 return;
 
-            builder.Register((c, p) =>
+            if (_dispose)
             {
-                var logger = _logger ?? Log.Logger;
+                builder.Register(c =>
+                {
+                    LoggerProvider provider = new LoggerProvider(_logger);
+                    return provider;
+                })
+                    .AsSelf()
+                    .AutoActivate()
+                    .OnRelease(c => c.Release());
 
-                var targetType = p.OfType<NamedParameter>()
-                    .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
+                builder.Register((c, p) =>
+                {
+                    var logger = c.Resolve<LoggerProvider>().GetLogger();
 
-                if (targetType != null)
-                    return logger.ForContext((Type) targetType.Value);
+                    var targetType = p.OfType<NamedParameter>()
+                        .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
 
-                return logger;
-            })
-            .As<ILogger>()
-            .ExternallyOwned();
+                    if (targetType != null)
+                        return logger.ForContext((Type)targetType.Value);
+
+                    return logger;
+                })
+                    .As<ILogger>()
+                    .ExternallyOwned();
+            }
+            else
+            {
+                builder.Register((c, p) =>
+                {
+                    var targetType = p.OfType<NamedParameter>()
+                        .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
+
+                    if (targetType != null)
+                        return (_logger ?? Log.Logger).ForContext((Type)targetType.Value);
+
+                    return _logger ?? Log.Logger;
+                })
+                    .As<ILogger>()
+                    .ExternallyOwned();
+            }
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
@@ -59,7 +88,7 @@ namespace AutofacSerilogIntegration
                 return;
 
             // Ignore components that provide loggers (and thus avoid a circular dependency below)
-            if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof (ILogger)))
+            if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof(ILogger) || ts.ServiceType == typeof(LoggerProvider)))
                 return;
 
             PropertyInfo[] targetProperties = null;
@@ -67,7 +96,18 @@ namespace AutofacSerilogIntegration
             var ra = registration.Activator as ReflectionActivator;
             if (ra != null)
             {
-                var ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
+                // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
+                // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
+                ConstructorInfo[] ctors;
+                try
+                {
+                    ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
+                }
+                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
+                {
+                    ctors = new ConstructorInfo[0];
+                }
+                
                 var usesLogger =
                     ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof (ILogger));
 

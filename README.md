@@ -40,7 +40,7 @@ Next, create the _root logger_:
 
 ```csharp
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.ColoredConsole()
+    .WriteTo.Console()
     .CreateLogger();
 ```
 
