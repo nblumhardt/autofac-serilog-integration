@@ -81,7 +81,7 @@ namespace AutofacSerilogIntegration
             }
         }
 
-        protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
+        protected override void AttachToComponentRegistration(IComponentRegistryBuilder componentRegistry,
             IComponentRegistration registration)
         {
             if (_skipRegistration)
