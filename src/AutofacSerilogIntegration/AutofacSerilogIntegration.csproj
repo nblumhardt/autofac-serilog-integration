@@ -13,7 +13,7 @@
     <PackageId>AutofacSerilogIntegration</PackageId>
     <PackageTags>Autofac</PackageTags>
     <PackageProjectUrl>https://github.com/nblumhardt/autofac-serilog-integration</PackageProjectUrl>
-    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
