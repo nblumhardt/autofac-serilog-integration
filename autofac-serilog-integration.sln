@@ -22,8 +22,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example", "example\Example\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutofacSerilogIntegration.Tests", "test\AutofacSerilogIntegration.Tests\AutofacSerilogIntegration.Tests.csproj", "{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.WebApp", "Example.WebApp\Example.WebApp.csproj", "{B03B9212-4C61-4BCE-ABC7-45AD298714D8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,10 +40,6 @@ Global
 		{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B03B9212-4C61-4BCE-ABC7-45AD298714D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B03B9212-4C61-4BCE-ABC7-45AD298714D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B03B9212-4C61-4BCE-ABC7-45AD298714D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B03B9212-4C61-4BCE-ABC7-45AD298714D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,7 +48,6 @@ Global
 		{EAEE5A7D-8082-4B13-8E7F-A51D40A75A3F} = {096ECAC8-1B75-440C-95E6-0F3B206ED6F7}
 		{B3E88BA9-57AA-4A33-A35B-FB26E150B86F} = {2CB8CBB3-2348-4894-96FB-D762D023B351}
 		{321AFDCC-8FCE-446B-82F4-FB2B8F99BE59} = {3D50212A-D8F6-40EF-90C3-E850627F5618}
-		{B03B9212-4C61-4BCE-ABC7-45AD298714D8} = {2CB8CBB3-2348-4894-96FB-D762D023B351}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AA004B51-D744-4BF9-85E8-3470D887A519}
