@@ -4,7 +4,6 @@ namespace AutofacSerilogIntegration.Tests.SourceContext.Scenarios
 {
     class AcceptsLogViaProperty : IAcceptsLogViaProperty
     {
-        // ReSharper disable once MemberCanBePrivate.Global
         public ILogger Log { get; set; }
 
         public void CreateLog()
@@ -13,7 +12,7 @@ namespace AutofacSerilogIntegration.Tests.SourceContext.Scenarios
         }
     }
 
-    internal interface IAcceptsLogViaProperty : ILogScenario
+    interface IAcceptsLogViaProperty : ILogScenario
     {
     }
 }
