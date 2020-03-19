@@ -18,7 +18,7 @@ namespace AutofacSerilogIntegration.Tests.SourceContext.Scenarios
         }
     }
 
-    internal interface IAcceptsLogViaCtor : ILogScenario
+    interface IAcceptsLogViaCtor : ILogScenario
     {
     }
 }
