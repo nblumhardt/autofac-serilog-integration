@@ -4,6 +4,7 @@ using System.Reflection;
 using Autofac;
 using Autofac.Core;
 using Autofac.Core.Activators.Reflection;
+using Autofac.Core.Registration;
 using Serilog;
 using Module = Autofac.Module;
 
@@ -81,7 +82,7 @@ namespace AutofacSerilogIntegration
             }
         }
 
-        protected override void AttachToComponentRegistration(IComponentRegistry componentRegistry,
+        protected override void AttachToComponentRegistration(IComponentRegistryBuilder componentRegistry,
             IComponentRegistration registration)
         {
             if (_skipRegistration)
