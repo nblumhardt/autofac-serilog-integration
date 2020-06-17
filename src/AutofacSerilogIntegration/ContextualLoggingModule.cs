@@ -48,7 +48,7 @@ namespace AutofacSerilogIntegration
                 })
                     .AsSelf()
                     .AutoActivate()
-                    .OnRelease(c => c.Release());
+                    .SingleInstance();
 
                 builder.Register((c, p) =>
                 {

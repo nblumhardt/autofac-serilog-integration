@@ -3,7 +3,7 @@ using Serilog;
 
 namespace AutofacSerilogIntegration
 {
-    internal class LoggerProvider
+    internal class LoggerProvider : IDisposable
     {
         readonly ILogger _logger;
         readonly Action _releaseAction;
@@ -26,7 +26,7 @@ namespace AutofacSerilogIntegration
             return _logger;
         }
 
-        public void Release()
+        void IDisposable.Dispose()
         {
             _releaseAction();
         }
