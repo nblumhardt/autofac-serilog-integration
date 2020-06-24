@@ -18,6 +18,7 @@ namespace AutofacSerilogIntegration
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
         readonly bool _dispose;
+        readonly bool _onlyKnownConsumers;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
@@ -26,11 +27,12 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false)
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool onlyKnownConsumers = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
             _dispose = dispose;
+            _onlyKnownConsumers = onlyKnownConsumers;
             _skipRegistration = false;
         }
 
@@ -94,8 +96,7 @@ namespace AutofacSerilogIntegration
 
             PropertyInfo[] targetProperties = null;
 
-            var ra = registration.Activator as ReflectionActivator;
-            if (ra != null)
+            if (registration.Activator is ReflectionActivator ra)
             {
                 // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
                 // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
@@ -128,6 +129,11 @@ namespace AutofacSerilogIntegration
 
                 // Ignore components known to be without logger dependencies
                 if (!usesLogger)
+                    return;
+            }
+            else
+            {
+                if (_onlyKnownConsumers)
                     return;
             }
 
