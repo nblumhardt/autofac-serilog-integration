@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Linq;
-using System.Reflection;
 using Autofac;
 using Autofac.Core;
-using Autofac.Core.Activators.Reflection;
 using Autofac.Core.Registration;
 using Serilog;
-using Module = Autofac.Module;
 
 namespace AutofacSerilogIntegration
 {
@@ -15,10 +12,9 @@ namespace AutofacSerilogIntegration
         const string TargetTypeParameterName = "Autofac.AutowiringPropertyInjector.InstanceType";
 
         readonly ILogger _logger;
-        readonly bool _autowireProperties;
+        readonly IRegistrationProcessor _registrationProcessor;
         readonly bool _skipRegistration;
         readonly bool _dispose;
-        readonly bool _onlyKnownConsumers;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
@@ -27,12 +23,11 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool onlyKnownConsumers = false)
+        internal ContextualLoggingModule(IRegistrationProcessor registrationProcessor, ILogger logger, bool dispose)
         {
             _logger = logger;
-            _autowireProperties = autowireProperties;
+            _registrationProcessor = registrationProcessor;
             _dispose = dispose;
-            _onlyKnownConsumers = onlyKnownConsumers;
             _skipRegistration = false;
         }
 
@@ -94,60 +89,24 @@ namespace AutofacSerilogIntegration
             if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof(ILogger) || ts.ServiceType == typeof(LoggerProvider)))
                 return;
 
-            PropertyInfo[] targetProperties = null;
+            var source = _registrationProcessor.Process(registration, out var injectParameter, out var targetProperties);
+            if (source == null)
+                return;
 
-            if (registration.Activator is ReflectionActivator ra)
+            if (injectParameter)
             {
-                // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
-                // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
-                ConstructorInfo[] ctors;
-                try
+                registration.Preparing += (sender, args) =>
                 {
-                    ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
-                }
-                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
-                {
-                    ctors = new ConstructorInfo[0];
-                }
-                
-                var usesLogger =
-                    ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof (ILogger));
-
-                if (_autowireProperties)
-                {
-                    var logProperties = ra.LimitType
-                                            .GetRuntimeProperties()
-                                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
-                                            .ToArray();
-
-                    if (logProperties.Any())
-                    {
-                        targetProperties = logProperties;
-                        usesLogger = true;
-                    }
-                }
-
-                // Ignore components known to be without logger dependencies
-                if (!usesLogger)
-                    return;
-            }
-            else
-            {
-                if (_onlyKnownConsumers)
-                    return;
+                    var log = args.Context.Resolve<ILogger>().ForContext(source);
+                    args.Parameters = new[] {TypedParameter.From(log)}.Concat(args.Parameters);
+                };
             }
 
-            registration.Preparing += (sender, args) =>
-            {
-                var log = args.Context.Resolve<ILogger>().ForContext(registration.Activator.LimitType);
-                args.Parameters = new[] {TypedParameter.From(log)}.Concat(args.Parameters);
-            };
-
-            if (targetProperties != null)
+            if (targetProperties != null && targetProperties.Length > 0)
             {
                 registration.Activating += (sender, args) =>
                 {
-                    var log = args.Context.Resolve<ILogger>().ForContext(registration.Activator.LimitType);
+                    var log = args.Context.Resolve<ILogger>().ForContext(source);
                     foreach (var targetProperty in targetProperties)
                     {
                         targetProperty.SetValue(args.Instance, log);

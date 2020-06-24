@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Autofac.Core;
 using Autofac.Core.Registration;
 using Serilog;
 
@@ -26,8 +27,24 @@ namespace AutofacSerilogIntegration
         /// <returns>An object supporting method chaining.</returns>
         public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool onlyKnownConsumers = false)
         {
-            if (builder == null) throw new ArgumentNullException(nameof(builder));
-            return builder.RegisterModule(new ContextualLoggingModule(logger, autowireProperties, dispose, onlyKnownConsumers));
+            var registrationProcessor = onlyKnownConsumers
+                ? (IRegistrationProcessor) new OnlyKnownCustomersRegistrationProcessor(autowireProperties)
+                : new DefaultRegistrationProcessor(autowireProperties);
+            return builder.RegisterLogger(registrationProcessor, logger, dispose);
+        }
+
+        /// <summary>
+        /// Register the <see cref="ILogger"/> with the <see cref="ContainerBuilder"/>. Where possible, the logger will
+        /// be resolved using the target type as a tagged property.
+        /// </summary>
+        /// <param name="builder">The container builder.</param>
+        /// <param name="registrationProcessor">A strategy to process <see cref="IComponentRegistration"/> for logging injection.</param>
+        /// <param name="logger">The logger. If null, the static <see cref="Log.Logger"/> will be used.</param>
+        /// <param name="dispose"></param>
+        /// <returns>An object supporting method chaining.</returns>
+        public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, IRegistrationProcessor registrationProcessor, ILogger logger = null, bool dispose = false)
+        {
+            return builder.RegisterModule(new ContextualLoggingModule(registrationProcessor, logger, dispose));
         }
     }
 }

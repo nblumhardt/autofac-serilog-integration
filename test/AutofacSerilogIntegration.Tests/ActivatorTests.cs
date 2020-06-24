@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using Autofac;
+using Autofac.Core;
+using Autofac.Core.Activators.Reflection;
 using Moq;
 using Serilog;
 using Xunit;
@@ -16,14 +20,21 @@ namespace AutofacSerilogIntegration.Tests
             _logger.SetReturnsDefault(_logger.Object);
         }
 
-        private void ResolveInstance<TDependency>(Action<ContainerBuilder> configureContainer, bool? onlyKnownConsumers)
+        private void ResolveInstance<TDependency>(Action<ContainerBuilder> configureContainer, bool? onlyKnownConsumers, IRegistrationProcessor registrationProcessor = null)
         {
             var containerBuilder = new ContainerBuilder();
 
-            if (onlyKnownConsumers == null)
+            if (onlyKnownConsumers == null && registrationProcessor == null)
                 containerBuilder.RegisterLogger(_logger.Object);
-            else
+            else if (onlyKnownConsumers != null)
+            {
+                Assert.Null(registrationProcessor);
                 containerBuilder.RegisterLogger(_logger.Object, onlyKnownConsumers: onlyKnownConsumers.Value);
+            }
+            else
+            {
+                containerBuilder.RegisterLogger(registrationProcessor, _logger.Object);
+            }
 
             containerBuilder.RegisterType<Component<TDependency>>();
             configureContainer(containerBuilder);
@@ -88,6 +99,56 @@ namespace AutofacSerilogIntegration.Tests
         {
             ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register(_ => new DependencyWithoutLogger()), onlyKnownConsumers: true);
             VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
+        }
+
+        [Fact]
+        public void CustomStrategy_DependencyWithLogger_ShouldCreateLogger()
+        {
+            ResolveInstance<DependencyWithLogger>(containerBuilder => 
+                containerBuilder.RegisterType<DependencyWithLogger>(), null, new Strategy());
+            VerifyLoggerCreation<DependencyWithLogger>(Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void CustomStrategy_DependencyWithoutLogger_ShouldNotCreateLogger()
+        {
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => 
+                containerBuilder.RegisterType<DependencyWithoutLogger>(), null, new Strategy());
+            VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
+        }
+
+        [Fact]
+        public void CustomStrategy_ProvidedInstanceActivator_DependencyWithoutLogger_ShouldNotCreateLogger()
+        {
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => 
+                containerBuilder.RegisterInstance(new DependencyWithoutLogger()), null, new Strategy());
+            VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
+        }
+
+        [Fact]
+        public void CustomStrategy_DelegateActivator_DependencyWithoutLogger_ShouldNotCreateLogger()
+        {
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => 
+                containerBuilder.Register(_ => new DependencyWithoutLogger()), null, new Strategy());
+            VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
+        }
+
+        private class Strategy : IRegistrationProcessor
+        {
+            public Type Process(IComponentRegistration registration, out bool injectParameter, out PropertyInfo[] targetProperties)
+            {
+                injectParameter = false;
+                targetProperties = null;
+                if (!(registration.Activator is ReflectionActivator ra))
+                    return null;
+
+                injectParameter = ra.ConstructorFinder
+                    .FindConstructors(ra.LimitType)
+                    .SelectMany(c => c.GetParameters())
+                    .Any(p => p.ParameterType == typeof(ILogger));
+
+                return ra.LimitType;
+            }
         }
 
         private class Component<TDependency>
