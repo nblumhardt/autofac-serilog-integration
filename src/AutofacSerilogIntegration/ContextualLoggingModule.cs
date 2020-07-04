@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Autofac;
 using Autofac.Core;
+using Autofac.Core.Activators.ProvidedInstance;
 using Autofac.Core.Activators.Reflection;
 using Autofac.Core.Registration;
 using Serilog;
@@ -18,7 +19,7 @@ namespace AutofacSerilogIntegration
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
         readonly bool _dispose;
-        readonly bool _onlyKnownConsumers;
+        readonly bool _alwaysSupplyParameter;
 
         [Obsolete("Do not use this constructor. This is required by the Autofac assembly scanning")]
         public ContextualLoggingModule()
@@ -27,12 +28,12 @@ namespace AutofacSerilogIntegration
             _skipRegistration = true;
         }
 
-        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool onlyKnownConsumers = false)
+        internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool alwaysSupplyParameter = false)
         {
             _logger = logger;
             _autowireProperties = autowireProperties;
             _dispose = dispose;
-            _onlyKnownConsumers = onlyKnownConsumers;
+            _alwaysSupplyParameter = alwaysSupplyParameter;
             _skipRegistration = false;
         }
 
@@ -96,45 +97,52 @@ namespace AutofacSerilogIntegration
 
             PropertyInfo[] targetProperties = null;
 
-            if (registration.Activator is ReflectionActivator ra)
+            switch (registration.Activator)
             {
-                // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
-                // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
-                ConstructorInfo[] ctors;
-                try
-                {
-                    ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
-                }
-                catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
-                {
-                    ctors = new ConstructorInfo[0];
-                }
-                
-                var usesLogger =
-                    ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof (ILogger));
-
-                if (_autowireProperties)
-                {
-                    var logProperties = ra.LimitType
-                                            .GetRuntimeProperties()
-                                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
-                                            .ToArray();
-
-                    if (logProperties.Any())
+                case ReflectionActivator ra:
+                    // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
+                    // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
+                    ConstructorInfo[] ctors;
+                    try
                     {
-                        targetProperties = logProperties;
-                        usesLogger = true;
+                        ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
                     }
-                }
+                    catch (Exception ex) when (ex.GetType().Name == "NoConstructorsFoundException") // Avoid needing to upgrade our Autofac reference to 4.7.0
+                    {
+                        ctors = new ConstructorInfo[0];
+                    }
 
-                // Ignore components known to be without logger dependencies
-                if (!usesLogger)
+                    var usesLogger =
+                        ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof(ILogger));
+
+                    if (_autowireProperties)
+                    {
+                        var logProperties = ra.LimitType
+                            .GetRuntimeProperties()
+                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic &&
+                                        !c.SetMethod.IsStatic)
+                            .ToArray();
+
+                        if (logProperties.Any())
+                        {
+                            targetProperties = logProperties;
+                            usesLogger = true;
+                        }
+                    }
+
+                    // Ignore components known to be without logger dependencies
+                    if (!usesLogger)
+                        return;
+                    break;
+                case ProvidedInstanceActivator _:
+                    //we cannot and should not affect provided instances
                     return;
-            }
-            else
-            {
-                if (_onlyKnownConsumers)
-                    return;
+                default:
+                    //most likely a DelegateActivator - or a custom one
+                    if (_alwaysSupplyParameter)
+                        break;
+                    else
+                        return;
             }
 
             registration.Preparing += (sender, args) =>

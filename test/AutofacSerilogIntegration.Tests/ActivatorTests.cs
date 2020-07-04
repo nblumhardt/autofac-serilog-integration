@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using Autofac;
+using Autofac.Core;
 using Moq;
 using Serilog;
 using Xunit;
@@ -16,14 +18,14 @@ namespace AutofacSerilogIntegration.Tests
             _logger.SetReturnsDefault(_logger.Object);
         }
 
-        private void ResolveInstance<TDependency>(Action<ContainerBuilder> configureContainer, bool? onlyKnownConsumers)
+        private void ResolveInstance<TDependency>(Action<ContainerBuilder> configureContainer, bool? alwaysSupplyParameter)
         {
             var containerBuilder = new ContainerBuilder();
 
-            if (onlyKnownConsumers == null)
+            if (alwaysSupplyParameter == null)
                 containerBuilder.RegisterLogger(_logger.Object);
             else
-                containerBuilder.RegisterLogger(_logger.Object, onlyKnownConsumers: onlyKnownConsumers.Value);
+                containerBuilder.RegisterLogger(_logger.Object, alwaysSupplyParameter: alwaysSupplyParameter.Value);
 
             containerBuilder.RegisterType<Component<TDependency>>();
             configureContainer(containerBuilder);
@@ -40,9 +42,9 @@ namespace AutofacSerilogIntegration.Tests
         [InlineData(null)]
         [InlineData(false)]
         [InlineData(true)]
-        public void ReflectionActivator_DependencyWithLogger_ShouldCreateLogger(bool? onlyKnownConsumers)
+        public void ReflectionActivator_DependencyWithLogger_ShouldCreateLogger(bool? alwaysSupplyParameter)
         {
-            ResolveInstance<DependencyWithLogger>(containerBuilder => containerBuilder.RegisterType<DependencyWithLogger>(), onlyKnownConsumers);
+            ResolveInstance<DependencyWithLogger>(containerBuilder => containerBuilder.RegisterType<DependencyWithLogger>(), alwaysSupplyParameter);
             VerifyLoggerCreation<DependencyWithLogger>(Times.AtLeastOnce);
         }
 
@@ -50,44 +52,62 @@ namespace AutofacSerilogIntegration.Tests
         [InlineData(null)]
         [InlineData(false)]
         [InlineData(true)]
-        public void ReflectionActivator_DependencyWithoutLogger_ShouldNotCreateLogger(bool? onlyKnownConsumers)
+        public void ReflectionActivator_DependencyWithoutLogger_ShouldNotCreateLogger(bool? alwaysSupplyParameter)
         {
-            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.RegisterType<DependencyWithoutLogger>(), onlyKnownConsumers);
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.RegisterType<DependencyWithoutLogger>(), alwaysSupplyParameter);
             VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData(false)]
-        //legacy behavior
-        public void Default_ProvidedInstanceActivator_DependencyWithoutLogger_CreatesLogger(bool? onlyKnownConsumers)
+        [InlineData(true)]
+        public void ProvidedInstanceActivator_ShouldNotCreateLogger(bool? alwaysSupplyParameter)
         {
-            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.RegisterInstance(new DependencyWithoutLogger()), onlyKnownConsumers);
-            VerifyLoggerCreation<DependencyWithoutLogger>(Times.AtLeastOnce);
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.RegisterInstance(new DependencyWithoutLogger()), alwaysSupplyParameter);
+            VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
         }
 
         [Theory]
         [InlineData(null)]
         [InlineData(false)]
-        //legacy behavior
-        public void Default_DelegateActivator_DependencyWithoutLogger_CreatesLogger(bool? onlyKnownConsumers)
+        public void DelegateActivator_ShouldNotCreateLogger(bool? alwaysSupplyParameter)
         {
-            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register(_ => new DependencyWithoutLogger()), onlyKnownConsumers);
-            VerifyLoggerCreation<DependencyWithoutLogger>(Times.AtLeastOnce);
-        }
-
-        [Fact]
-        public void OnlyKnownCustomers_ProvidedInstanceActivator_DependencyWithoutLogger_ShouldNotCreateLogger()
-        {
-            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.RegisterInstance(new DependencyWithoutLogger()), onlyKnownConsumers: true);
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register(_ => new DependencyWithoutLogger()), alwaysSupplyParameter);
             VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
         }
 
-        [Fact]
-        public void OnlyKnownCustomers_DelegateActivator_DependencyWithoutLogger_ShouldNotCreateLogger()
+        [Theory]
+        [InlineData(null)]
+        [InlineData(false)]
+        public void DelegateActivator_ShouldNotPassParameter(bool? alwaysSupplyParameter)
         {
-            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register(_ => new DependencyWithoutLogger()), onlyKnownConsumers: true);
-            VerifyLoggerCreation<DependencyWithoutLogger>(Times.Never);
+            Parameter[] parameters = null;
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register((_, pp) =>
+            {
+                parameters = pp.ToArray();
+                return new DependencyWithoutLogger();
+            }), alwaysSupplyParameter);
+            Assert.NotNull(parameters);
+            Assert.Empty(parameters);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        public void DelegateActivator_WhenForced_ShouldPassParameter(bool? alwaysSupplyParameter)
+        {
+            Parameter[] parameters = null;
+            ResolveInstance<DependencyWithoutLogger>(containerBuilder => containerBuilder.Register((_, pp) =>
+            {
+                parameters = pp.ToArray();
+                return new DependencyWithoutLogger();
+            }), alwaysSupplyParameter);
+            Assert.NotNull(parameters);
+            var value = Assert.Single(parameters
+                .OfType<TypedParameter>()
+                .Where(p => p.Type == typeof(ILogger))
+            )?.Value;
+            Assert.IsAssignableFrom<ILogger>(value);
         }
 
         private class Component<TDependency>
