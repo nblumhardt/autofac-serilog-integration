@@ -119,8 +119,7 @@ namespace AutofacSerilogIntegration
                     {
                         var logProperties = ra.LimitType
                             .GetRuntimeProperties()
-                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic &&
-                                        !c.SetMethod.IsStatic)
+                            .Where(c => c.CanWrite && c.PropertyType == typeof(ILogger) && c.SetMethod.IsPublic && !c.SetMethod.IsStatic)
                             .ToArray();
 
                         if (logProperties.Any())
