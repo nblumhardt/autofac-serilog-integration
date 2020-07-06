@@ -19,11 +19,15 @@ namespace AutofacSerilogIntegration
         /// <param name="autowireProperties">If true, properties on reflection-based components of type <see cref="ILogger"/> will
         /// be injected.</param>
         /// <param name="dispose"></param>
+        /// <param name="alwaysSupplyParameter">
+        /// If true, the parameter containing <see cref="ILogger"/> will be injected even when registration cannot be verified to use it,
+        /// such as <see cref="Autofac.Core.Activators.Delegate.DelegateActivator"/>.
+        /// </param>
         /// <returns>An object supporting method chaining.</returns>
-        public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, ILogger logger = null, bool autowireProperties = false, bool dispose = false)
+        public static IModuleRegistrar RegisterLogger(this ContainerBuilder builder, ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool alwaysSupplyParameter = false)
         {
-            if (builder == null) throw new ArgumentNullException("builder");
-            return builder.RegisterModule(new ContextualLoggingModule(logger, autowireProperties, dispose));
+            if (builder == null) throw new ArgumentNullException(nameof(builder));
+            return builder.RegisterModule(new ContextualLoggingModule(logger, autowireProperties, dispose, alwaysSupplyParameter));
         }
     }
 }
