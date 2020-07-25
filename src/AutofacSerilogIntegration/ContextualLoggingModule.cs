@@ -15,7 +15,7 @@ namespace AutofacSerilogIntegration
     {
         const string TargetTypeParameterName = "Autofac.AutowiringPropertyInjector.InstanceType";
 
-        readonly ILogger _logger;
+        readonly Func<IComponentContext, ILogger> _loggerLambda;
         readonly bool _autowireProperties;
         readonly bool _skipRegistration;
         readonly bool _dispose;
@@ -29,8 +29,12 @@ namespace AutofacSerilogIntegration
         }
 
         internal ContextualLoggingModule(ILogger logger = null, bool autowireProperties = false, bool dispose = false, bool alwaysSupplyParameter = false)
+            : this((c) => logger, autowireProperties, dispose, alwaysSupplyParameter)
+        { }
+
+        internal ContextualLoggingModule(Func<IComponentContext, ILogger> loggerLambda, bool autowireProperties = false, bool dispose = false, bool alwaysSupplyParameter = false)
         {
-            _logger = logger;
+            _loggerLambda = loggerLambda;
             _autowireProperties = autowireProperties;
             _dispose = dispose;
             _alwaysSupplyParameter = alwaysSupplyParameter;
@@ -46,7 +50,7 @@ namespace AutofacSerilogIntegration
             {
                 builder.Register(c =>
                 {
-                    LoggerProvider provider = new LoggerProvider(_logger);
+                    LoggerProvider provider = new LoggerProvider(_loggerLambda(c));
                     return provider;
                 })
                     .AsSelf()
@@ -76,9 +80,9 @@ namespace AutofacSerilogIntegration
                         .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
 
                     if (targetType != null)
-                        return (_logger ?? Log.Logger).ForContext((Type)targetType.Value);
+                        return (_loggerLambda(c) ?? Log.Logger).ForContext((Type)targetType.Value);
 
-                    return _logger ?? Log.Logger;
+                    return _loggerLambda(c) ?? Log.Logger;
                 })
                     .As<ILogger>()
                     .ExternallyOwned();
