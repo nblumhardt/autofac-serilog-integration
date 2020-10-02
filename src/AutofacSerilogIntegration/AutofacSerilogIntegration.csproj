@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Contextual logger injection for Autofac using Serilog</Description>
     <AssemblyTitle>AutofacSerilogIntegration</AssemblyTitle>
-    <VersionPrefix>4.0.1</VersionPrefix>
+    <VersionPrefix>5.0.0-alpha2</VersionPrefix>
     <Authors>Nicholas Blumhardt</Authors>
     <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyName>AutofacSerilogIntegration</AssemblyName>

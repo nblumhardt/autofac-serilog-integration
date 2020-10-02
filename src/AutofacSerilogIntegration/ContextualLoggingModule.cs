@@ -44,16 +44,26 @@ namespace AutofacSerilogIntegration
 
             if (_dispose)
             {
-                builder.Register(c =>
+                RegisterLoggerAndProviderForDisposingMode(builder);
+            }
+            else
+            {
+                RegisterLoggerForNonDisposingMode(builder);
+            }
+        }
+
+        private void RegisterLoggerAndProviderForDisposingMode(ContainerBuilder builder)
+        {
+            builder.Register(c =>
                 {
                     LoggerProvider provider = new LoggerProvider(_logger);
                     return provider;
                 })
-                    .AsSelf()
-                    .AutoActivate()
-                    .SingleInstance();
+                .AsSelf()
+                .AutoActivate()
+                .SingleInstance();
 
-                builder.Register((c, p) =>
+            builder.Register((c, p) =>
                 {
                     var logger = c.Resolve<LoggerProvider>().GetLogger();
 
@@ -61,28 +71,28 @@ namespace AutofacSerilogIntegration
                         .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
 
                     if (targetType != null)
-                        return logger.ForContext((Type)targetType.Value);
+                        return logger.ForContext((Type) targetType.Value);
 
                     return logger;
                 })
-                    .As<ILogger>()
-                    .ExternallyOwned();
-            }
-            else
-            {
-                builder.Register((c, p) =>
+                .As<ILogger>()
+                .ExternallyOwned();
+        }
+
+        private void RegisterLoggerForNonDisposingMode(ContainerBuilder builder)
+        {
+            builder.Register((c, p) =>
                 {
                     var targetType = p.OfType<NamedParameter>()
                         .FirstOrDefault(np => np.Name == TargetTypeParameterName && np.Value is Type);
 
                     if (targetType != null)
-                        return (_logger ?? Log.Logger).ForContext((Type)targetType.Value);
+                        return (_logger ?? Log.Logger).ForContext((Type) targetType.Value);
 
                     return _logger ?? Log.Logger;
                 })
-                    .As<ILogger>()
-                    .ExternallyOwned();
-            }
+                .As<ILogger>()
+                .ExternallyOwned();
         }
 
         protected override void AttachToComponentRegistration(IComponentRegistryBuilder componentRegistry,
@@ -144,30 +154,16 @@ namespace AutofacSerilogIntegration
                         return;
             }
 
-            // Attach to the registration's pipeline build.
+            AttachRegistrationsPipelineBuild(registration);
+        }
+
+        private void AttachRegistrationsPipelineBuild(IComponentRegistration registration)
+        {
             registration.PipelineBuilding += (sender, pipeline) =>
             {
                 // Add our middleware to the pipeline.
                 pipeline.Use(new SerilogMiddleware(registration.Activator.LimitType, _logger, _autowireProperties));
             };
-
-            //registration.Preparing += (sender, args) =>
-            //{
-            //    var log = args.Context.Resolve<ILogger>().ForContext(registration.Activator.LimitType);
-            //    args.Parameters = new[] {TypedParameter.From(log)}.Concat(args.Parameters);
-            //};
-
-            //if (targetProperties != null)
-            //{
-            //    registration.Activating += (sender, args) =>
-            //    {
-            //        var log = args.Context.Resolve<ILogger>().ForContext(registration.Activator.LimitType);
-            //        foreach (var targetProperty in targetProperties)
-            //        {
-            //            targetProperty.SetValue(args.Instance, log);
-            //        }
-            //    };
-            //}
         }
     }
 }
