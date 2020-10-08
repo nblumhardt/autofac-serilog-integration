@@ -52,7 +52,7 @@ namespace AutofacSerilogIntegration
             }
         }
 
-        private void RegisterLoggerAndProviderForDisposingMode(ContainerBuilder builder)
+        void RegisterLoggerAndProviderForDisposingMode(ContainerBuilder builder)
         {
             builder.Register(c =>
                 {
@@ -79,7 +79,7 @@ namespace AutofacSerilogIntegration
                 .ExternallyOwned();
         }
 
-        private void RegisterLoggerForNonDisposingMode(ContainerBuilder builder)
+        void RegisterLoggerForNonDisposingMode(ContainerBuilder builder)
         {
             builder.Register((c, p) =>
                 {
@@ -157,7 +157,7 @@ namespace AutofacSerilogIntegration
             AttachRegistrationsPipelineBuild(registration);
         }
 
-        private void AttachRegistrationsPipelineBuild(IComponentRegistration registration)
+        void AttachRegistrationsPipelineBuild(IComponentRegistration registration)
         {
             registration.PipelineBuilding += (sender, pipeline) =>
             {
