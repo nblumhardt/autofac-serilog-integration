@@ -8,7 +8,7 @@ namespace AutofacSerilogIntegration.Tests.SourceContext.Scenarios
 
         public void CreateLog()
         {
-            Log.Information("Hello, also!");
+            Log?.Information("Hello, also!");
         }
     }
 
