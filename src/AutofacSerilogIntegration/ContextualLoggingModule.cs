@@ -105,22 +105,10 @@ namespace AutofacSerilogIntegration
             if (registration.Services.OfType<TypedService>().Any(ts => ts.ServiceType == typeof(ILogger) || ts.ServiceType == typeof(LoggerProvider)))
                 return;
 
-            PropertyInfo[] targetProperties = null;
-
             switch (registration.Activator)
             {
                 case ReflectionActivator ra:
-                    // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
-                    // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
-                    ConstructorInfo[] ctors;
-                    try
-                    {
-                        ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
-                    }
-                    catch (NoConstructorsFoundException)
-                    {
-                        ctors = new ConstructorInfo[0];
-                    }
+                    var ctors = SafelyGetConstructors(ra);
 
                     var usesLogger =
                         ctors.SelectMany(ctor => ctor.GetParameters()).Any(pi => pi.ParameterType == typeof(ILogger));
@@ -134,7 +122,6 @@ namespace AutofacSerilogIntegration
 
                         if (logProperties.Any())
                         {
-                            targetProperties = logProperties;
                             usesLogger = true;
                         }
                     }
@@ -155,6 +142,23 @@ namespace AutofacSerilogIntegration
             }
 
             AttachRegistrationsPipelineBuild(registration);
+        }
+
+        static ConstructorInfo[] SafelyGetConstructors(ReflectionActivator ra)
+        {
+            // As of Autofac v4.7.0 "FindConstructors" will throw "NoConstructorsFoundException" instead of returning an empty array
+            // See: https://github.com/autofac/Autofac/pull/895 & https://github.com/autofac/Autofac/issues/733
+            ConstructorInfo[] ctors;
+            try
+            {
+                ctors = ra.ConstructorFinder.FindConstructors(ra.LimitType);
+            }
+            catch (NoConstructorsFoundException)
+            {
+                ctors = new ConstructorInfo[0];
+            }
+
+            return ctors;
         }
 
         void AttachRegistrationsPipelineBuild(IComponentRegistration registration)
