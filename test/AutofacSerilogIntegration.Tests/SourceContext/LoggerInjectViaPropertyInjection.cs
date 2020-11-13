@@ -12,6 +12,8 @@ namespace AutofacSerilogIntegration.Tests.SourceContext
         [Fact]
         public void HasSourceContextProperty()
         {
+            Arrange_Container();
+
             using (TestCorrelator.CreateContext())
             {
                 var test = Container.Resolve<IAcceptsLogViaProperty>();
@@ -23,6 +25,21 @@ namespace AutofacSerilogIntegration.Tests.SourceContext
                 logEvent.Properties.ShouldContain(p => p.Key.Equals(SourceContextKey));
                 logEvent.Properties[SourceContextKey].ToString()
                     .ShouldBe($"\"{typeof(AcceptsLogViaProperty).FullName}\"");
+            }
+        }
+
+        [Fact]
+        public void DoesNotHaveSourceContextPropertyWhenAutowireDisabled()
+        {
+            Arrange_Container(autowireProperties: false);
+
+            using (TestCorrelator.CreateContext())
+            {
+                var test = Container.Resolve<IAcceptsLogViaProperty>();
+                test.CreateLog();
+
+                var ctx = TestCorrelator.GetLogEventsFromCurrentContext().ToList();
+                ctx.ShouldBeEmpty();
             }
         }
     }

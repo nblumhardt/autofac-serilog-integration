@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Runtime.InteropServices;
 using Autofac;
 using AutofacSerilogIntegration.Tests.SourceContext.Scenarios;
 using Serilog.Sinks.TestCorrelator;
@@ -9,9 +10,13 @@ namespace AutofacSerilogIntegration.Tests.SourceContext
 {
     public class LoggerInjectViaConstructor : SourceContextBaseTest
     {
-        [Fact]
-        public void HasSourceContextProperty()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void HasSourceContextProperty(bool autowireProperties)
         {
+            Arrange_Container(autowireProperties: autowireProperties);
+
             using (TestCorrelator.CreateContext())
             {
                 var test = Container.Resolve<IAcceptsLogViaCtor>();
